@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ชำระเงิน - Textmini</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { min-height: 100vh; background: #f4f6f9; display: flex; align-items: center; justify-content: center; padding: 24px; color: #263238; }
+        .payment-panel { width: 100%; max-width: 520px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 10px 28px rgba(0,0,0,0.08); overflow: hidden; }
+        .panel-header { padding: 24px; background: #2563eb; color: #fff; }
+        .panel-header h1 { font-size: 24px; margin-bottom: 6px; }
+        .panel-header p { opacity: 0.9; font-size: 14px; }
+        .panel-body { padding: 24px; }
+        .summary-row { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #eef2f7; font-size: 15px; }
+        .summary-row span:first-child { color: #667085; }
+        .summary-row strong { text-align: right; }
+        .total { margin-top: 14px; padding: 16px; background: #f8fafc; border-left: 4px solid #2563eb; display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; }
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 24px 24px; }
+        .btn { border: 0; border-radius: 6px; padding: 12px 14px; font-size: 15px; font-weight: 700; cursor: pointer; text-decoration: none; text-align: center; }
+        .btn-primary { background: #10b981; color: white; }
+        .btn-secondary { background: #e5e7eb; color: #374151; }
+        .empty { padding: 24px; text-align: center; color: #667085; }
+        @media (max-width: 520px) {
+            .actions { grid-template-columns: 1fr; }
+            .summary-row { flex-direction: column; gap: 4px; }
+            .summary-row strong { text-align: left; }
+        }
+    </style>
+</head>
+<body>
+    <main class="payment-panel">
+        <div class="panel-header">
+            <h1>ชำระเงิน</h1>
+            <p>ตรวจสอบรายละเอียดการจองก่อนยืนยันการชำระเงิน</p>
+        </div>
+
+        <div id="payment-content" class="panel-body"></div>
+
+        <div class="actions">
+            <a class="btn btn-secondary" href="booking.html">กลับไปหน้าเลือกที่นั่ง</a>
+            <button class="btn btn-primary" onclick="confirmPayment()">ยืนยันว่าชำระเงินแล้ว</button>
+        </div>
+    </main>
+
+    <script>
+        const booking = JSON.parse(localStorage.getItem('lastBooking') || 'null');
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        const content = document.getElementById('payment-content');
+
+        if (!booking) {
+            content.innerHTML = '<div class="empty">ยังไม่มีข้อมูลการจองล่าสุด</div>';
+        } else {
+            content.innerHTML = `
+                <div class="summary-row"><span>เลขที่การจอง</span><strong>${booking.booking_id || '-'}</strong></div>
+                <div class="summary-row"><span>ผู้โดยสาร</span><strong>${user ? user.full_name : '-'}</strong></div>
+                <div class="summary-row"><span>คนขับ / รอบรถ</span><strong>${booking.driver_name || '-'}</strong></div>
+                <div class="summary-row"><span>วันที่เดินทาง</span><strong>${booking.booking_date}</strong></div>
+                <div class="summary-row"><span>เวลาออกเดินทาง</span><strong>${booking.travel_time}</strong></div>
+                <div class="summary-row"><span>หมายเลขเบาะ</span><strong>${booking.seat_number}</strong></div>
+                <div class="total"><span>ยอดชำระ</span><span>${booking.price} บาท</span></div>
+            `;
+        }
+
+        function confirmPayment() {
+            if (!booking) {
+                alert('ไม่พบข้อมูลการจอง');
+                return;
+            }
+
+            alert('บันทึกสถานะชำระเงินเรียบร้อยแล้ว');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

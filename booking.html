@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จองตั๋วรถตู้ - เลือกที่นั่ง</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f0f2f5; padding: 30px 10px; display: flex; justify-content: center; }
+        
+        .booking-container { max-width: 900px; width: 100%; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); display: grid; grid-template-columns: 1.2fr 1fr; overflow: hidden; }
+        
+        /* ฝั่งซ้าย: ผังที่นั่ง */
+        .seat-section { padding: 30px; background: #fafafa; border-right: 1px solid #eee; }
+        .section-title { font-size: 20px; color: #2c3e50; margin-bottom: 20px; font-weight: bold; }
+        
+        /* สัญลักษณ์สถานะที่นั่ง */
+        .seat-status-info { display: flex; justify-content: space-around; margin-bottom: 25px; background: white; padding: 10px; border-radius: 8px; border: 1px solid #eee; }
+        .status-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+        .status-dot { width: 16px; height: 16px; border-radius: 4px; }
+        .dot-available { background-color: #e0e0e0; }
+        .dot-selected { background-color: #2ecc71; }
+        .dot-occupied { background-color: #e74c3c; }
+
+        /* โครงสร้างตัวรถตู้ */
+        .van-layout { background: white; border: 3px solid #bdc3c7; border-radius: 20px 20px 10px 10px; padding: 30px 20px 20px 20px; max-width: 320px; margin: 0 auto; box-shadow: inset 0 5px 15px rgba(0,0,0,0.05); }
+        .van-front { display: flex; justify-content: space-between; margin-bottom: 35px; border-bottom: 2px dashed #ddd; padding-bottom: 15px; }
+        .driver-seat { background-color: #34495e; color: white; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: bold; width: 55px; text-align: center; }
+        
+        .van-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .seat { width: 55px; height: 55px; background-color: #e0e0e0; border: 1px solid #c8d6e5; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; user-select: none; }
+        .seat:hover:not(.occupied) { background-color: #bdf0d4; border-color: #2ecc71; transform: scale(1.05); }
+        .seat.selected { background-color: #2ecc71; color: white; border-color: #27ae60; box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3); }
+        .seat.occupied { background-color: #e74c3c; color: white; border-color: #c0392b; cursor: not-allowed; }
+        .walkway { width: 55px; } /* ทางเดินตรงกลางรถตู้ */
+
+        /* ฝั่งขวา: ฟอร์มสรุปรายละเอียด */
+        .form-section { padding: 30px; display: flex; flex-direction: column; justify-content: space-between; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 14px; color: #666; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; outline: none; transition: 0.2s; }
+        .form-group input:focus, .form-group select:focus { border-color: #9b59b6; }
+        
+        .summary-box { background: #f8f9fa; border-radius: 8px; padding: 15px; margin-top: 15px; border-left: 4px solid #9b59b6; }
+        .summary-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+        .summary-item:last-child { margin-bottom: 0; padding-top: 8px; border-top: 1px dashed #ddd; font-weight: bold; font-size: 16px; color: #2c3e50; }
+
+        .btn-confirm { width: 100%; padding: 14px; background: linear-gradient(135deg, #71b7e6, #9b59b6); border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 20px; box-shadow: 0 4px 15px rgba(155, 89, 182, 0.2); }
+        .btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(155, 89, 182, 0.3); }
+
+        @media (max-width: 760px) {
+            body { padding: 12px; display: block; }
+            .booking-container { display: block; border-radius: 10px; overflow: visible; }
+            .seat-section, .form-section { padding: 18px; }
+            .seat-section { border-right: none; border-bottom: 1px solid #eee; }
+            .section-title { font-size: 18px; line-height: 1.35; }
+            .seat-status-info { flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
+            .van-layout { max-width: 100%; padding: 22px 12px 14px; }
+            .seat, .driver-seat, .walkway { width: 46px; }
+            .seat { height: 46px; font-size: 13px; }
+            .van-row { gap: 8px; }
+            .summary-item { gap: 12px; align-items: flex-start; }
+            .btn-confirm { position: sticky; bottom: 10px; z-index: 2; box-shadow: 0 8px 20px rgba(155, 89, 182, 0.35); }
+        }
+
+        @media (max-width: 380px) {
+            .seat, .driver-seat, .walkway { width: 40px; }
+            .seat { height: 40px; }
+            .van-row { gap: 6px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="booking-container">
+        <div class="seat-section">
+            <h2 class="section-title">🚌 ผังที่นั่งโดยสารภายในรถตู้</h2>
+            
+            <div class="seat-status-info">
+                <div class="status-item"><div class="status-dot dot-available"></div> ว่าง</div>
+                <div class="status-item"><div class="status-dot dot-selected"></div> กำลังเลือก</div>
+                <div class="status-item"><div class="status-dot dot-occupied"></div> จองแล้ว</div>
+            </div>
+
+            <div class="van-layout">
+                <div class="van-front">
+                    <div class="driver-seat">คนขับ</div>
+                    <div class="seat" data-seat="A1">A1</div>
+                </div>
+
+                <div class="van-row">
+                    <div class="seat" data-seat="B1">B1</div>
+                    <div class="seat" data-seat="B2">B2</div>
+                    <div class="walkway"></div>
+                    <div class="seat" data-seat="B3">B3</div>
+                </div>
+
+                <div class="van-row">
+                    <div class="seat" data-seat="C1">C1</div>
+                    <div class="seat" data-seat="C2">C2</div>
+                    <div class="walkway"></div>
+                    <div class="seat" data-seat="C3">C3</div>
+                </div>
+
+                <div class="van-row">
+                    <div class="seat" data-seat="D1">D1</div>
+                    <div class="seat" data-seat="D2">D2</div>
+                    <div class="seat" data-seat="D3">D3</div>
+                    <div class="seat" data-seat="D4">D4</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div>
+                <h2 class="section-title">📝 รายละเอียดการเดินทาง</h2>
+                
+                <div class="form-group">
+                    <label>ชื่อผู้โดยสาร</label>
+                    <input type="text" id="display-name" disabled style="background-color: #eee;">
+                </div>
+
+                <div class="form-group">
+                    <label>เลือกคนขับ / รอบรถ</label>
+                    <select id="driver-select" onchange="checkBookedSeats()">
+                        <option value="1">คุณโจ้ รถตู้ (รอบสายใต้)</option>
+                        <option value="2">คุณเอ็ม รถตู้ (รอบหมอชิต)</option>
+                        <option value="3">คุณบอย รถตู้ (รอบเอกมัย)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>วันที่เดินทาง</label>
+                    <input type="date" id="booking-date" onchange="checkBookedSeats()">
+                </div>
+
+                <div class="form-group">
+                    <label>เวลารถออก</label>
+                    <select id="travel-time" onchange="checkBookedSeats()">
+                        <option value="08:00">08:00 น.</option>
+                        <option value="13:00">13:00 น.</option>
+                        <option value="18:00">18:00 น.</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <div class="summary-box">
+                    <div class="summary-item"><span>ที่นั่งที่เลือก:</span> <strong id="summary-seat">-</strong></div>
+                    <div class="summary-item"><span>ราคาต่อที่นั่ง:</span> <strong>180 บาท</strong></div>
+                    <div class="summary-item"><span>ราคารวมทั้งหมด:</span> <span id="summary-total" style="color:#e74c3c; font-weight:bold;">0 บาท</span></div>
+                </div>
+
+                <button class="btn-confirm" onclick="submitBooking()">ยืนยันการจองตั๋วรถตู้</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedSeat = null;
+        let currentUser = null;
+
+        // โค้ดส่วนดึงข้อมูลคนล็อกอินและเปิดระบบคลิกเลือกเบาะรถ
+        window.onload = function() {
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                alert('กรุณาเข้าสู่ระบบก่อนทำการจองที่นั่งครับ');
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUser = JSON.parse(userData);
+            document.getElementById('display-name').value = currentUser.full_name;
+            
+            // ตั้งค่าวันที่ค่าเริ่มต้นเป็นวันปัจจุบัน
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('booking-date').value = today;
+
+            // ตรรกะผูกฟังก์ชันคลิกเบาะรถเปลี่ยนสี
+            const seats = document.querySelectorAll('.seat');
+            seats.forEach(seat => {
+                seat.addEventListener('click', () => {
+                    if (seat.classList.contains('occupied')) return; 
+
+                    seats.forEach(s => s.classList.remove('selected'));
+                    
+                    seat.classList.add('selected');
+                    selectedSeat = seat.getAttribute('data-seat');
+                    
+                    document.getElementById('summary-seat').innerText = selectedSeat;
+                    document.getElementById('summary-total').innerText = "180 บาท";
+                });
+            });
+
+            checkBookedSeats();
+        };
+
+        function checkBookedSeats() {
+            const scheduleId = document.getElementById('driver-select').value; 
+            const date = document.getElementById('booking-date').value;
+            const travelTime = document.getElementById('travel-time').value;
+
+            if (!date) return;
+
+            selectedSeat = null;
+            document.getElementById('summary-seat').innerText = '-';
+            document.getElementById('summary-total').innerText = '0 บาท';
+
+            fetch(`/api/booked-seats?schedule_id=${scheduleId}&booking_date=${date}&travel_time=${travelTime}`)
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        const bookedSeats = result.bookedSeats;
+                        const seats = document.querySelectorAll('.seat');
+                        
+                        seats.forEach(seat => {
+                            const seatNo = seat.getAttribute('data-seat');
+                            seat.classList.remove('selected', 'occupied');
+
+                            if (bookedSeats.includes(seatNo)) {
+                                seat.classList.add('occupied');
+                            }
+                        });
+                    }
+                })
+                .catch(err => console.error('Error fetching seats:', err));
+        }
+
+        function submitBooking() {
+            if (!selectedSeat) {
+                alert('กรุณาคลิกเลือกที่นั่งบนผังรถตู้ก่อนครับ');
+                return;
+            }
+
+            const bookingData = {
+                user_id: currentUser.user_id,
+                schedule_id: document.getElementById('driver-select').value, 
+                seat_number: selectedSeat,
+                booking_date: document.getElementById('booking-date').value,
+                travel_time: document.getElementById('travel-time').value
+            };
+
+            fetch('/api/book', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bookingData)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('🎉 ' + data.message);
+                    localStorage.setItem('lastBooking', JSON.stringify({
+                        booking_id: data.booking_id,
+                        schedule_id: data.schedule_id,
+                        driver_id: document.getElementById('driver-select').value,
+                        driver_name: document.getElementById('driver-select').selectedOptions[0].text,
+                        seat_number: selectedSeat,
+                        booking_date: document.getElementById('booking-date').value,
+                        travel_time: document.getElementById('travel-time').value,
+                        price: 180
+                    }));
+                    window.location.href = 'pay.html';
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+            });
+        }
+    </script>
+</body>
+</html>

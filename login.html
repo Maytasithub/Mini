@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - ระบบจองรถตู้</title>
+    <style>
+        
+        /* ---ส่วนของ CSS ตกแต่งหน้าจอ (สามารถแยกไปไว้ใน css/style.css ได้ในอนาคต) --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #71b7e6, #9b59b6);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: #ffffff;
+            max-width: 400px;
+            width: 100%;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 15px 25px rgba(0,0,0,0.1);
+        }
+
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #9b59b6;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: #9b59b6;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-login:hover {
+            background: #8e44ad;
+        }
+
+        .error-msg {
+            color: red;
+            font-size: 14px;
+            margin-bottom: 15px;
+            display: none; /* ซ่อนไว้ก่อน จะแสดงเมื่อกรอกผิด */
+            text-align: center;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .register-link a {
+            color: #9b59b6;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            body { align-items: flex-start; }
+            .login-container { padding: 28px 20px; }
+            .login-container h2 { font-size: 20px; line-height: 1.3; }
+        }
+        
+    </style>
+    <script>
+        const translations = {
+
+    th: {
+        title: "ระบบจองรถตู้ - เข้าสู่ระบบ",
+        usernameLabel: "ชื่อผู้ใช้ (Username / Email)",
+        passwordLabel: "รหัสผ่าน (Password)",
+        loginBtn: "เข้าสู่ระบบ",
+        registerText: "ยังไม่มีบัญชีผู้ใช้?",
+        registerLink: "สมัครสมาชิกที่นี่"
+    },
+
+    en: {
+        title: "Van Booking System - Login",
+        usernameLabel: "Username / Email",
+        passwordLabel: "Password",
+        loginBtn: "Login",
+        registerText: "Don't have an account?",
+        registerLink: "Register here"
+    }
+
+};
+
+function changeLanguage(lang) {
+
+    localStorage.setItem('language', lang);
+
+    document.getElementById('title').innerText =
+        translations[lang].title;
+
+    document.getElementById('usernameLabel').innerText =
+        translations[lang].usernameLabel;
+
+    document.getElementById('passwordLabel').innerText =
+        translations[lang].passwordLabel;
+
+    document.getElementById('loginBtn').innerText =
+        translations[lang].loginBtn;
+
+    document.getElementById('registerText').innerText =
+        translations[lang].registerText;
+
+    document.getElementById('registerLink').innerText =
+        translations[lang].registerLink;
+}
+
+    </script>
+</head>
+<body>
+
+    <div class="login-container">
+       <h2 id="title">ระบบจองรถตู้ - เข้าสู่ระบบ</h2>
+        <div style="text-align:center; margin-bottom:15px;">
+    <button onclick="changeLanguage('th')">🇹🇭 ไทย</button>
+    <button onclick="changeLanguage('en')">🇬🇧 English</button>
+</div>
+        <div id="error-message" class="error-msg">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง!</div>
+
+        <form id="loginForm">
+            <div class="input-group">
+                <label id="usernameLabel" for="username">ชื่อผู้ใช้ (Username / Email)</label>
+                <input type="text" id="username" placeholder="กรอกชื่อผู้ใช้หรืออีเมล" required>
+            </div>
+
+            <div class="input-group">
+                <label id="passwordLabel" for="password"> รหัสผ่าน (Password)</label>
+                <input type="password" id="password" placeholder="กรอกรหัสผ่าน" required>
+            </div>
+
+            <button type="submit" class="btn-login" id="loginBtn">เข้าสู่ระบบ</button>
+        </form>
+
+        <div class="register-link">
+
+    <span id="registerText">
+        ยังไม่มีบัญชีผู้ใช้?
+    </span>
+
+    <a href="register.html" id="registerLink">
+        สมัครสมาชิกที่นี่
+    </a>
+
+</div>
+    </div>
+
+    <script>
+       document.getElementById('loginForm').addEventListener('submit', function(event) {
+    event.preventDefault(); // ป้องกันไม่ให้หน้าเว็บรีเฟรชตัวเอง
+
+    // 1. ดึงค่าที่ผู้ใช้กรอกเข้ามาจริง ๆ จากหน้าฟอร์ม
+    const usernameInput = document.getElementById('username').value;
+    const passwordInput = document.getElementById('password').value;
+    const errorMessageBox = document.getElementById('error-message');
+
+    // ซ่อนข้อความแจ้งเตือนความผิดพลาดไว้ก่อนในตอนแรก
+    errorMessageBox.style.display = 'none';
+
+    // 2. ส่งข้อมูล (Fetch) ข้ามเครือข่ายไปยัง API หลังบ้านที่ทำงานร่วมกับ MySQL
+    fetch('/api/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            username: usernameInput,
+            password: passwordInput
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        // 3. ตรวจสอบผลลัพธ์ที่หลังบ้านส่งกลับมา
+        if (data.success) {
+            alert('🎉 ' + data.message);
+
+            // เก็บข้อมูลผู้ใช้ที่ล็อกอินสำเร็จลงใน LocalStorage ของบราวเซอร์ 
+            // เพื่อนำเอาไปใช้แสดงชื่อในหน้า booking.html ที่เราทำไว้ก่อนหน้านี้
+            localStorage.setItem('user', JSON.stringify(data.user));
+
+            // ตรวจสอบสิทธิ์ (Role) เพื่อสลับหน้าเว็บให้ถูกต้องตามฐานข้อมูลจริง
+            if (data.user.role === 'admin') {
+                window.location.href = 'admin.html'; // ส่งแอดมินไปหน้าหลังบ้าน
+            } else {
+                // อาจารย์แอบแก้ตัวสะกดลิ้งก์คำว่า "booking.html" ให้ตรงกับชื่อไฟล์จริงด้วยครับ 
+                window.location.href = 'booking.html';
+            }
+        } else {
+            // ถ้าหลังบ้านบอกว่าไม่ผ่าน (รหัสผิด/ไม่เจอชื่อ) ให้เปิดกล่องข้อความสีแดงเตือน
+            errorMessageBox.innerText = data.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+            errorMessageBox.style.display = 'block';
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('เกิดข้อผิดพลาด: ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์หลังบ้านได้ (อย่าลืมเปิดจอดำ node server.js นะครับ)');
+    });
+});
+    </script>
+</body>
+</html>

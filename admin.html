@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบหลังบ้าน - จัดการข้อมูลผู้โดยสารและการจอง</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f9; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; gap: 25px; }
+        .form-container, .dashboard-content { max-width: 1000px; width: 100%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); }
+        .form-container { max-width: 640px; }
+        .title { font-size: 20px; color: #2c3e50; margin-bottom: 20px; text-align: center; font-weight: bold; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 14px; color: #4b5563; font-weight: 600; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 15px; outline: none; }
+        .btn-submit { width: 100%; padding: 12px; background: #3b82f6; border: none; border-radius: 6px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-submit:hover { background: #2563eb; }
+        
+        /* สลับแท็บ */
+        .tab-menu-container { max-width: 1000px; width: 100%; display: flex; gap: 10px; margin-top: 10px; }
+        .tab-btn { flex: 1; padding: 15px; font-size: 16px; font-weight: bold; text-align: center; background: #e5e7eb; color: #4b5563; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .tab-btn:hover { background: #d1d5db; }
+        .tab-btn.active { background: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+        .dashboard-content { display: none; overflow-x: auto; }
+        .dashboard-content.active { display: block; animation: fadeIn 0.4s ease; }
+        .dashboard-title { font-size: 18px; color: #2c3e50; margin-bottom: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 2px solid #3b82f6; gap: 12px; }
+        .btn-refresh { padding: 6px 14px; background: #10b981; color: white; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; white-space: nowrap; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; min-width: 760px; }
+        th { background-color: #f3f4f6; color: #374151; font-weight: 600; padding: 14px; border-bottom: 2px solid #e5e7eb; }
+        td { padding: 14px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+        tr:hover { background-color: #f9fafb; }
+        
+        /* ปุ่มจัดการข้อมูล */
+        .btn-edit { background: #f59e0b; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-right: 5px; }
+        .btn-edit:hover { background: #d97706; }
+        .btn-delete { background: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .btn-delete:hover { background: #dc2626; }
+        
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; background-color: #e0f2fe; color: #0369a1; }
+        .badge-success { background-color: #d1fae5; color: #065f46; border: 1px solid #34d399; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <h2 class="title">บันทึกข้อมูลตารางเดินรถใหม่</h2>
+        <form id="scheduleForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>รหัสคนขับ (Driver ID)</label>
+                    <select id="driver_id" required>
+                        <option value="1">รหัส 1 (คุณโจ้)</option>
+                        <option value="2">รหัส 2 (คุณเอ็ม)</option>
+                        <option value="3">รหัส 3 (คุณบอย)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>วันที่เดินทาง</label>
+                    <input type="date" id="departure_date" required>
+                </div>
+                <div class="form-group full">
+                    <label>ชื่อเส้นทาง / สายรถตู้</label>
+                    <input type="text" id="route_name" placeholder="เช่น กรุงเทพฯ - สายใต้" required>
+                </div>
+                <div class="form-group">
+                    <label>เวลาที่รถออก</label>
+                    <input type="time" id="departure_time" step="1" value="08:00:00" required>
+                </div>
+                <div class="form-group">
+                    <label>ราคาค่าโดยสาร (บาท)</label>
+                    <input type="number" id="price" value="180" min="0" required>
+                </div>
+            </div>
+            <button type="submit" class="btn-submit">บันทึกรอบรถลงฐานข้อมูล</button>
+        </form>
+    </div>
+
+    <div class="tab-menu-container">
+        <button class="tab-btn active" onclick="switchTab(event, 'users-tab')">ดูรายชื่อผู้สมัครสมาชิก</button>
+        <button class="tab-btn" onclick="switchTab(event, 'bookings-tab')">ดูประวัติการจองรถ</button>
+    </div>
+
+    <div id="users-tab" class="dashboard-content active">
+        <div class="dashboard-title">
+            <span>รายชื่อผู้โดยสารในระบบทั้งหมด</span>
+            <button class="btn-refresh" onclick="loadUsersData()">อัปเดตข้อมูล</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>ชื่อผู้ใช้</th>
+                    <th>ชื่อ-นามสกุล</th>
+                    <th>เบอร์โทรศัพท์</th>
+                    <th>สิทธิ์ระบบ</th>
+                    <th>การจัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="users-table-body">
+                <tr><td colspan="6" style="text-align: center; color: #9ca3af;">กำลังโหลดข้อมูลผู้ใช้งาน...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="bookings-tab" class="dashboard-content">
+        <div class="dashboard-title">
+            <span>รายการจองตั๋วโดยสารทั้งหมด</span>
+            <button class="btn-refresh" onclick="loadBookingsData()">อัปเดตข้อมูล</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>User ID</th>
+                    <th>Schedule ID</th>
+                    <th>หมายเลขเบาะ</th>
+                    <th>วันที่จอง</th>
+                    <th>สถานะ</th>
+                    <th>การจัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="bookings-table-body">
+                <tr><td colspan="7" style="text-align: center; color: #9ca3af;">กำลังโหลดประวัติการจอง...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:3000';
+
+        window.onload = function() {
+            document.getElementById('departure_date').value = new Date().toISOString().split('T')[0];
+            loadUsersData();
+            loadBookingsData();
+        };
+
+        function switchTab(event, tabId) {
+            document.querySelectorAll('.dashboard-content').forEach(content => content.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // 1. โหลดข้อมูลผู้ใช้งาน + แสดงปุ่มแก้ไข/ลบ
+        function loadUsersData() {
+            fetch(`${BASE_URL}/api/users`)
+                .then(res => res.json())
+                .then(result => {
+                    const tbody = document.getElementById('users-table-body');
+                    tbody.innerHTML = '';
+                    if (result.success && result.data.length > 0) {
+                        result.data.forEach(user => {
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td><b>${user.user_id}</b></td>
+                                    <td>${user.username}</td>
+                                    <td>${user.full_name}</td>
+                                    <td>${user.phone || '-'}</td>
+                                    <td><span class="badge">${user.role}</span></td>
+                                    <td>
+                                        <button class="btn-edit" onclick="editUser(${user.user_id}, '${user.full_name}', '${user.phone}')">📝 แก้ไข</button>
+                                        <button class="btn-delete" onclick="deleteUser(${user.user_id})">❌ ลบ</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">ไม่พบข้อมูลสมาชิก</td></tr>';
+                    }
+                }).catch(err => { console.error(err); });
+        }
+
+        // 2. ฟังก์ชันแก้ไขข้อมูลผู้ใช้งาน (ใช้ Prompt รับค่าใหม่)
+        function editUser(userId, oldName, oldPhone) {
+            const newName = prompt("แก้ไขชื่อ-นามสกุล:", oldName);
+            const newPhone = prompt("แก้ไขเบอร์โทรศัพท์:", oldPhone);
+            
+            if (newName === null || newPhone === null) return; // กดยกเลิก
+
+            fetch(`${BASE_URL}/api/users/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ full_name: newName, phone: newPhone })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) { alert('🎉 แก้ไขข้อมูลผู้ใช้สำเร็จ!'); loadUsersData(); }
+                else { alert('❌ แก้ไขล้มเหลว: ' + data.message); }
+            });
+        }
+
+        // 3. ฟังก์ชันลบผู้ใช้งาน
+        function deleteUser(userId) {
+            if (!confirm(`⚠️ คุณแน่ใจใช่ไหมที่จะลบผู้ใช้งานรหัส ${userId} ออกจากระบบ?`)) return;
+
+            fetch(`${BASE_URL}/api/users/${userId}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) { alert('🗑️ ลบข้อมูลผู้ใช้เรียบร้อย!'); loadUsersData(); }
+                else { alert('❌ ไม่สามารถลบได้: ' + data.message); }
+            });
+        }
+
+        // 4. โหลดข้อมูลรายการจอง
+        function loadBookingsData() {
+            fetch(`${BASE_URL}/api/bookings`)
+                .then(res => res.json())
+                .then(result => {
+                    const tbody = document.getElementById('bookings-table-body');
+                    tbody.innerHTML = '';
+                    if (result.success && result.data.length > 0) {
+                        result.data.forEach(b => {
+                            const date = b.booking_date ? b.booking_date.split('T')[0] : '-';
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td><b>${b.booking_id}</b></td>
+                                    <td>${b.user_id}</td>
+                                    <td>${b.schedule_id}</td>
+                                    <td><span style="color:#2563eb; font-weight:bold;">${b.seat_number}</span></td>
+                                    <td>${date}</td>
+                                    <td><span class="badge badge-success">${b.status}</span></td>
+                                    <td>
+                                        <button class="btn-edit" onclick="editBooking(${b.booking_id}, '${b.seat_number}', '${b.status}')">📝 แก้ไขเบาะ</button>
+                                        <button class="btn-delete" onclick="deleteBooking(${b.booking_id})">❌ ลบ</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #9ca3af;">ไม่มีข้อมูลการจอง</td></tr>';
+                    }
+                }).catch(err => { console.error(err); });
+        }
+
+        // 5. ฟังก์ชันแก้ไขข้อมูลการจอง (เปลี่ยนเบาะ/เปลี่ยนสถานะ)
+        function editBooking(bookingId, oldSeat, oldStatus) {
+            const newSeat = prompt("ระบุหมายเลขเบาะใหม่ (เช่น A1, B2):", oldSeat);
+            const newStatus = prompt("ระบุสถานะ (confirmed / cancelled):", oldStatus);
+            
+            if (newSeat === null || newStatus === null) return;
+
+            fetch(`${BASE_URL}/api/bookings/${bookingId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ seat_number: newSeat, status: newStatus })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) { alert('🎉 แก้ไขรอบจองสำเร็จ!'); loadBookingsData(); }
+                else { alert('❌ แก้ไขล้มเหลว: ' + data.message); }
+            });
+        }
+
+        // 6. ฟังก์ชันลบรายการจองตั๋ว
+        function deleteBooking(bookingId) {
+            if (!confirm(`⚠️ ตั๋วใบนี้จะถูกยกเลิกถาวร ยืนยันลบรายการจองรหัส ${bookingId}?`)) return;
+
+            fetch(`${BASE_URL}/api/bookings/${bookingId}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) { alert('🗑️ ลบประวัติการจองสำเร็จ!'); loadBookingsData(); }
+                else { alert('❌ ลบล้มเหลว: ' + data.message); }
+            });
+        }
+
+        // ฟอร์มแอดรอบรถตู้ (เดิม)
+        document.getElementById('scheduleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const scheduleData = {
+                driver_id: parseInt(document.getElementById('driver_id').value, 10),
+                route_name: document.getElementById('route_name').value,
+                departure_date: document.getElementById('departure_date').value,
+                departure_time: document.getElementById('departure_time').value,
+                price: parseFloat(document.getElementById('price').value)
+            };
+
+            fetch(`${BASE_URL}/api/add-schedule`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(scheduleData)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) { alert('🎉 บันทึกรอบรถสำเร็จ!'); document.getElementById('scheduleForm').reset(); }
+                else { alert('เกิดข้อผิดพลาด: ' + data.message); }
+            });
+        });
+    </script>
+</body>
+</html>
